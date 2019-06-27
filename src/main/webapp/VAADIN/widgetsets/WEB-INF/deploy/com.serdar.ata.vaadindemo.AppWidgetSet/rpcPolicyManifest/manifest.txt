@@ -1,0 +1,2 @@
+# Module com.serdar.ata.vaadindemo.AppWidgetSet
+# RPC service class, partial path of RPC policy file
