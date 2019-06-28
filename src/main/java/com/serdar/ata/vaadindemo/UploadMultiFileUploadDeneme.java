@@ -4,6 +4,7 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.StreamVariable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
+import com.vaadin.ui.dnd.FileDropTarget;
 import com.vaadin.ui.themes.ValoTheme;
 import com.wcs.wcslib.vaadin.widget.multifileupload.ui.MultiFileUpload;
 import com.wcs.wcslib.vaadin.widget.multifileupload.ui.UploadFinishedHandler;
@@ -25,7 +26,7 @@ public class UploadMultiFileUploadDeneme extends Window {
     private VerticalLayout mainLayout;
     private UploadStateWindow uploadStateWindow = new UploadStateWindow();
     private UploadFinishedHandler uploadFinishedHandler;
-    private double uploadSpeed = 500;
+    private double uploadSpeed = 100; ///
     private boolean uploadFieldsEnabled = true;
     private boolean multiple = true;
     private  SlowUpload slowUpload ;
@@ -82,8 +83,12 @@ public class UploadMultiFileUploadDeneme extends Window {
         dropPanel.setSizeFull();
         dropPanel.setStyleName(ValoTheme.PANEL_WELL);
 
-        DragAndDropWrapper dragAndDropWrapper = slowUpload.createDropComponent(dropPanel);
-        dragAndDropWrapper.setSizeUndefined();
+//        DragAndDropWrapper dragAndDropWrapper = slowUpload.createDropComponent(dropPanel);
+//        dragAndDropWrapper.setSizeUndefined();
+        FileDropTarget target = new FileDropTarget<>(dropLayout, event -> {
+            System.out.println(event.getFiles().toArray().length);
+        });
+
     }
 
 

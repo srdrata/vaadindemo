@@ -1,8 +1,6 @@
 package com.serdar.ata.vaadindemo;
 
 import com.vaadin.ui.*;
-import com.wcs.wcslib.vaadin.widget.multifileupload.ui.MultiFileUpload;
-import org.vaadin.easyuploads.MultiUpload;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,6 +12,8 @@ import java.util.LinkedList;
  * @author Serdar.Ata
  * Created by Serdar.Ata  on 28/06/2019.
  */
+
+//https://vaadin.com/attachment/65ba1596-4d70-470f-8328-c8de53367c7b/UploadFileWithProgress.java
 public class UploadWithProgressDenemeWindow extends Window implements Upload.Receiver, Upload.ProgressListener, Upload.StartedListener, Upload.FinishedListener, Upload.SucceededListener, Upload.FailedListener {
 
     private Upload upload;
