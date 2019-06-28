@@ -28,9 +28,10 @@ public class MainUI extends UI {
 
         Button openDownloadDialog = new Button("Open Download Dialog");
         Button openUploadDialog = new Button("Open Upload Dialog");
+        Button uploadProgressDeneme = new Button("Upload progress ");
+        Button multiFileUploadDeneme = new Button("MultiFile Upload");
 
-
-        mainLayout.addComponents(openDownloadDialog, openUploadDialog);
+        mainLayout.addComponents(openDownloadDialog, openUploadDialog, uploadProgressDeneme, multiFileUploadDeneme);
 
         setContent(mainLayout);
 
@@ -75,6 +76,15 @@ public class MainUI extends UI {
             UI.getCurrent().addWindow(uploadOperationsWindow);
         });
 
+        uploadProgressDeneme.addClickListener(clickEvent -> {
+            UploadWithProgressDenemeWindow uploadWithProgressDenemeWindow = new UploadWithProgressDenemeWindow();
+            UI.getCurrent().addWindow(uploadWithProgressDenemeWindow);
+        });
+
+        multiFileUploadDeneme.addClickListener(clickEvent -> {
+            UploadMultiFileUploadDeneme uploadMultiFileUploadDeneme = new UploadMultiFileUploadDeneme();
+            UI.getCurrent().addWindow(uploadMultiFileUploadDeneme);
+        });
 
 
 

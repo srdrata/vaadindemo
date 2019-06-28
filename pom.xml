@@ -38,6 +38,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.wcs.wcslib</groupId>
+			<artifactId>wcslib-vaadin-widget-multifileupload</artifactId>
+			<version>4.0</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-themes</artifactId>
 			<version>${vaadin.version}</version>

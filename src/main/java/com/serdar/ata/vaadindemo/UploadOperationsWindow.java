@@ -19,7 +19,6 @@ import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-//@StyleSheet("styles.scss")
 public class UploadOperationsWindow extends Window  implements Upload.FinishedListener, Upload.StartedListener, Upload.FailedListener, Upload.SucceededListener {
 
     private File file;
@@ -34,6 +33,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     private VerticalLayout dropLayout;
     private Panel dropPanel;
+
+    private Panel progressPanel;
 
     private TempFile tempFile;
 
@@ -91,6 +92,17 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
         dropLayout.addComponent(components);
         dropLayout.setComponentAlignment(components, Alignment.MIDDLE_CENTER);
+
+
+        initProgressPanel();
+
+        mainLayout.addComponent(progressPanel);
+    }
+
+    protected  void initProgressPanel(){
+        progressPanel = new Panel("deneme");
+        progressPanel.setSizeFull();
+        progressPanel.setStyleName(ValoTheme.PANEL_WELL);
     }
 
     protected void initDropPanel(){
@@ -195,7 +207,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         upload.addFailedListener(this);
         upload.addSucceededListener(this);
         upload.setImmediateMode(true); //TODO setImmediateMode = false yapılıp ekrandan upload componenti gizlenip save butona basınca upload işleminin başlamasının sağlanması
-        upload.setButtonStyleName(ValoTheme.BUTTON_BORDERLESS_COLORED);
+        upload.setButtonStyleName(ValoTheme.BUTTON_PRIMARY);
         upload.setButtonCaption("Browse File");
         upload.setId("VLbsUpload");
     }
@@ -225,15 +237,15 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
 
 
-class FileUploader implements Upload.Receiver, Upload.SucceededListener{
-
-    @Override
-    public OutputStream receiveUpload(String filename, String mimeType) {
-        return null;
-    }
-
-    @Override
-    public void uploadSucceeded(Upload.SucceededEvent event) {
-
-    }
-}
+//class FileUploader implements Upload.Receiver, Upload.SucceededListener{
+//
+//    @Override
+//    public OutputStream receiveUpload(String filename, String mimeType) {
+//        return null;
+//    }
+//
+//    @Override
+//    public void uploadSucceeded(Upload.SucceededEvent event) {
+//
+//    }
+//}

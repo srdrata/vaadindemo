@@ -5,5 +5,5 @@
 
     <inherits name="org.vaadin.easyuploads.Widgetset" />
 
-
+    <inherits name="com.wcs.wcslib.vaadin.widget.multifileupload.WidgetSet" />
 </module>

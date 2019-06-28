@@ -1,1 +1,0 @@
-$wnd.com_serdar_ata_vaadindemo_AppWidgetSet.runAsyncCallback2('cjb(1888,1,Bke);_.$b=function jyc(){acc((!Ubc&&(Ubc=new icc),Ubc),this.a.d)};nee(Dh)(2);\n//# sourceURL=com.serdar.ata.vaadindemo.AppWidgetSet-2.js\n')
