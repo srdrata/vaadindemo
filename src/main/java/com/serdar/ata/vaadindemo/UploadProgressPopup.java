@@ -28,8 +28,8 @@ public class UploadProgressPopup extends Window {
         setPosition(Page.getCurrent().getBrowserWindowWidth() - 310, Page.getCurrent().getBrowserWindowHeight() - 160);
         setModal(true);
         setClosable(false);
-        setWidth(40, Sizeable.Unit.PERCENTAGE);
-        setHeight(80, Sizeable.Unit.PERCENTAGE);
+        setWidth(50, Sizeable.Unit.PERCENTAGE);
+        setHeight(50, Sizeable.Unit.PERCENTAGE);
         this.fileInfoCollection.forEach(fileInfo -> fileNamefileInfoMap.put(fileInfo.getFileName(), fileInfo));
         content = new UploadProgressLayout();
         setContent(content);
@@ -92,6 +92,12 @@ public class UploadProgressPopup extends Window {
 
             fileInfoGrid.setSizeFull();
             addComponent(fileInfoGrid);
+
+            Button closeButton = new Button("Close");
+            addComponent(closeButton);
+            closeButton.addClickListener(clickEvent-> {
+                close();
+            });
         }
 
         void refresh(FileInfo fileInfo) {

@@ -1,13 +1,21 @@
 package com.serdar.ata.vaadindemo;
 
-import com.vaadin.annotations.Theme;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.UI;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * @author Serdar.Ata
@@ -17,6 +25,7 @@ import java.io.*;
 
 @Widgetset("com.serdar.ata.vaadindemo.AppWidgetSet")
 @SpringUI(path = "")
+@Push(transport = Transport.WEBSOCKET)
 public class MainUI extends UI {
 
 
@@ -37,39 +46,27 @@ public class MainUI extends UI {
 
         openDownloadDialog.addClickListener(clickEvent -> {
 
-            DownloadOperationsWindow modalWindow = new DownloadOperationsWindow();
+            FileExporter modalWindow = new FileExporter("filename.txt", new Consumer<OutputStream>() {
+                @Override
+                public void accept(OutputStream outputStream) {
+
+                    try {
+
+                        System.out.println("Writer to outstream");
+                        outputStream.write(("heelo " + UUID.randomUUID().toString()) .getBytes());
+
+
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
             UI.getCurrent().addWindow(modalWindow);
-
-//            if (modalWindow != null) {
-//               modalWindow.addCloseListener(closeEvent -> {
-//                   if (! StringUtils.isEmpty(modalWindow.getFilename())) {
-//                       File tmpFile = new File("D:/" + modalWindow.getFilename() + ".txt");
-//                       FileInputStream fileInputStream = null;
-//
-//                       try {
-//                           tmpFile.createNewFile();
-//                       } catch (IOException ex) {
-//                           System.out.println(ex.getMessage());
-//                       }
-//
-//                       try {
-//                           fileInputStream = new FileInputStream(tmpFile);
-//                       } catch (FileNotFoundException ex) {
-//                           System.out.println(ex.getMessage());
-//                       }
-//
-//                       if (fileInputStream != null) {
-//                           StreamResource downloadResource = createFileResource(fileInputStream);
-//                           downloadResource.setFilename(modalWindow.getFilename() + ".txt");
-//                           FileDownloader fileDownloader = new FileDownloader(downloadResource);
-//                           fileDownloader.setFileDownloadResource(downloadResource);
-//                           fileDownloader.extend(clickEvent.getButton());
-//                       }
-//                   }
-//               });
-//            }
-
         });
+
+
 
         openUploadDialog.addClickListener(clickEvent -> {
             UploadOperationsWindow uploadOperationsWindow = new UploadOperationsWindow();

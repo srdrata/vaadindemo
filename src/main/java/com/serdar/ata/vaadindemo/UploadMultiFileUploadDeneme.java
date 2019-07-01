@@ -3,7 +3,10 @@ package com.serdar.ata.vaadindemo;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.server.StreamVariable;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Panel;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.dnd.FileDropTarget;
 import com.vaadin.ui.themes.ValoTheme;
 import com.wcs.wcslib.vaadin.widget.multifileupload.ui.MultiFileUpload;
@@ -12,9 +15,6 @@ import com.wcs.wcslib.vaadin.widget.multifileupload.ui.UploadStatePanel;
 import com.wcs.wcslib.vaadin.widget.multifileupload.ui.UploadStateWindow;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Serdar.Ata
@@ -47,10 +47,10 @@ public class UploadMultiFileUploadDeneme extends Window {
         setContent(mainLayout);
         slowUpload = null;
 
+        initDropPanel();
         initSlowUpload();
-        mainLayout.addComponent(slowUpload);
+        mainLayout.addComponents(dropPanel);
 
-        initDropArea(slowUpload);
 
         MVerticalLayout components = new MVerticalLayout().withUndefinedSize().withDefaultComponentAlignment(Alignment.MIDDLE_CENTER).withSpacing(true).withFullWidth().with(
                 new MLabel(VaadinIcons.UPLOAD.getHtml()).withContentMode(ContentMode.HTML).withStyleName(ValoTheme.LABEL_COLORED, "upload-icon"),
@@ -61,7 +61,7 @@ public class UploadMultiFileUploadDeneme extends Window {
 
         dropLayout.addComponent(components);
         dropLayout.setComponentAlignment(components, Alignment.MIDDLE_CENTER);
-        mainLayout.addComponent(dropLayout);
+        //mainLayout.addComponent(dropLayout);
 
     }
 
@@ -73,9 +73,10 @@ public class UploadMultiFileUploadDeneme extends Window {
         slowUpload.setPanelCaption("Multi Select Upload");
         slowUpload.getSmartUpload().setUploadButtonCaptions("Upload Single File", "Upload Multi Files");/// Upload button caption
         slowUpload.setMaxFileCount(FILE_COUNT); ///
+
     }
 
-    public void initDropArea(SlowUpload slowUpload){
+    public void initDropPanel(){
         dropLayout = new VerticalLayout();
         dropLayout.setSizeFull();
 

@@ -1,11 +1,18 @@
 package com.serdar.ata.vaadindemo;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.vaadin.annotations.StyleSheet;
+import com.vaadin.event.dd.acceptcriteria.AcceptAll;
+import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.server.StreamVariable;
+import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
+import com.vaadin.ui.dnd.FileDropHandler;
 import com.vaadin.ui.dnd.FileDropTarget;
+import com.vaadin.ui.dnd.event.FileDropEvent;
 import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
@@ -13,9 +20,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Collator;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -38,6 +43,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     private TempFile tempFile;
 
+    private VerticalLayout fileArea;
+
 
     public UploadOperationsWindow(){
         super("Upload File");
@@ -58,13 +65,20 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         cancelButton.addClickListener(clickEvent ->{
             close();
         } );
+
+
     }
 
     private void init(){
         saveButton = new Button("Save");
         cancelButton = new Button("Cancel");
+        fileArea = new VerticalLayout();
+        fileArea.setMargin(false);
+        fileArea.setSpacing(true);
 
         mainLayout = new VerticalLayout();
+        mainLayout.addComponent(fileArea);
+        fileArea.setWidth(100, Unit.PERCENTAGE);
         buttonLayout = new HorizontalLayout();
         buttonLayout.addComponents(saveButton, cancelButton);
 
@@ -72,8 +86,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         buttonLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
 
         setPosition(20, 150);
-        setWidth("400px");
-        setHeight("400px");
+        setWidth("600px");
+        //setHeight("400px");
         setModal(true);
         setContent(mainLayout);
 
@@ -93,16 +107,17 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         dropLayout.addComponent(components);
         dropLayout.setComponentAlignment(components, Alignment.MIDDLE_CENTER);
 
-
-        initProgressPanel();
-
-        mainLayout.addComponent(progressPanel);
     }
 
     protected  void initProgressPanel(){
         progressPanel = new Panel("deneme");
         progressPanel.setSizeFull();
         progressPanel.setStyleName(ValoTheme.PANEL_WELL);
+    }
+
+    @Override
+    public void setContent(Component content) {
+        super.setContent(content);
     }
 
     protected void initDropPanel(){
@@ -115,6 +130,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         //dropPanel.setStyleName(ValoTheme.PANEL_BORDERLESS);
 
         new FileDropTarget<>(dropLayout, event -> {
+
             Collection<Html5File> files = event.getFiles().stream().sorted((o1, o2) -> {
                 //TODO control locale settings
                 Locale locale = Locale.getDefault();
@@ -122,81 +138,52 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                 return collator.compare(o1.getFileName(), o2.getFileName()); //compare file names
             }).collect(Collectors.toList());
 
-            if(!files.isEmpty()){
-                List<UploadProgressPopup.FileInfo> fileInfoList = files.stream().map(html5File -> new UploadProgressPopup.FileInfo(html5File.getFileName(), html5File.getFileSize())).collect(Collectors.toList());
-                UploadProgressPopup uploadProgressPopup = new UploadProgressPopup(fileInfoList);
-                uploadProgressPopup.show();
-                Boolean errorOccured = new Boolean(false);
-                Integer numFiles = new Integer(files.size());
-                UI.getCurrent().setPollInterval(1000); //
 
-                for(Html5File file: files){
-                    if(errorOccured){
-                        break;
+            event.getFiles().forEach(file -> {
+
+                FileUploadProgress fileProgress = new FileUploadProgress(file.getFileName());
+                //fileProgress.setWidth(100, Unit.PERCENTAGE);
+                fileArea.addComponent(fileProgress);
+                file.setStreamVariable(new StreamVariable() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        tempFile = new TempFile(file.getFileName());
+                        return tempFile.getFos();
+
                     }
 
-                    long fileSize = file.getFileSize();
-                    file.setStreamVariable(new StreamVariable() {
-                        @Override
-                        public OutputStream getOutputStream() {
-                            tempFile = new TempFile(file.getFileName());
-                            return tempFile.getFos();
-                        }
+                    @Override
+                    public boolean listenProgress() {
+                        return true;
+                    }
 
-                        @Override
-                        public boolean listenProgress() {
-                            return true;
-                        }
+                    @Override
+                    public void onProgress(StreamingProgressEvent event) {
+                        float value = event.getBytesReceived() / (float)event.getContentLength();
+                        fileProgress.setValue(value);
+                    }
 
-                        @Override
-                        public void onProgress(StreamingProgressEvent event) {
-                            String fileName = event.getFileName();
-                            long bytesReceived = event.getBytesReceived();
+                    @Override
+                    public void streamingStarted(StreamingStartEvent event) {
 
-                            double value = 0;
+                    }
 
-                            if (fileSize > 0) {
-                                value = bytesReceived / fileSize;
-                            }
+                    @Override
+                    public void streamingFinished(StreamingEndEvent event) {
 
-                            if (value < 0) {
-                                value = 0;
-                            }
+                    }
 
-                            uploadProgressPopup.update(fileName, value);
-                        }
+                    @Override
+                    public void streamingFailed(StreamingErrorEvent event) {
 
-                        @Override
-                        public void streamingStarted(StreamingStartEvent event) {
+                    }
 
-                        }
-
-                        @Override
-                        public void streamingFinished(StreamingEndEvent event) {
-                            System.out.println("Streaming finished " + event.toString());
-
-                        }
-
-                        @Override
-                        public void streamingFailed(StreamingErrorEvent event) {
-                            Notification.show("Upload failed " +  event.toString());
-                            if (tempFile != null) {
-                                tempFile.delete();
-                                tempFile = null;
-                            }
-                            uploadProgressPopup.close();
-                        }
-
-                        @Override
-                        public boolean isInterrupted() {
-                            return false;
-                        }
-                    });
-                }
-            }
-
-
-
+                    @Override
+                    public boolean isInterrupted() {
+                        return false;
+                    }
+                });
+            });
         });
 
 //        mainLayout.addComponent(dropPanel);
@@ -206,6 +193,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         upload = new Upload(null, receiver);
         upload.addFailedListener(this);
         upload.addSucceededListener(this);
+        upload.addStartedListener(this);
         upload.setImmediateMode(true); //TODO setImmediateMode = false yapılıp ekrandan upload componenti gizlenip save butona basınca upload işleminin başlamasının sağlanması
         upload.setButtonStyleName(ValoTheme.BUTTON_PRIMARY);
         upload.setButtonCaption("Browse File");
@@ -226,6 +214,17 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     @Override
     public void uploadStarted(Upload.StartedEvent event) {
+
+        FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
+        event.getUpload().addProgressListener(new Upload.ProgressListener() {
+            @Override
+            public void updateProgress(long readBytes, long contentLength) {
+                fileProgress.setValue( readBytes / (float)contentLength);
+            }
+        });
+
+        fileArea.addComponent(fileProgress);
+        //fileProgress.setWidth(100, Unit.PERCENTAGE);
         System.out.println("upload started");
     }
 
@@ -233,8 +232,109 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     public void uploadSucceeded(Upload.SucceededEvent event) {
         System.out.println("upload succeed");
     }
-}
 
+    class FileUploadProgress extends HorizontalLayout
+    {
+        Label filenameLabel;
+        ProgressBar progress;
+
+        FileUploadProgress(String filename)
+        {
+            this.setMargin(false);
+            this.setWidth("100%");
+
+            this.addStyleName("red");
+
+            filenameLabel = new Label(filename);
+            filenameLabel.setWidth("100%");
+            this.addComponent(filenameLabel);
+
+
+            progress = new ProgressBar();
+            HorizontalLayout progressLayout = new HorizontalLayout();
+            progressLayout.addComponent(progress);
+            progressLayout.setWidth(120, Unit.PIXELS);
+            progress.setWidth(100, Unit.PERCENTAGE);
+
+            this.addComponent(progressLayout);
+            this.setExpandRatio(progressLayout, 0f);
+            this.setExpandRatio(filenameLabel, 1f);
+
+
+        }
+
+        public void setValue(float value)
+        {
+            progress.setValue(value);
+        }
+
+
+    }
+
+}
+/*
+class MyUploadPanel extends FileDropTarget implements FileDropHandler{
+
+
+    public MyUploadPanel(Component root) {
+        super(root);
+
+    }
+    @Override
+    public void drop(FileDropEvent event) {
+        Collection<Html5File> files = event.getFiles();
+
+        if (files != null){
+            Collection<Html5File> filesToUpload = files;
+            for (Html5File file: filesToUpload){
+                file.setStreamVariable(new StreamVariable() {
+                    @Override
+                    public OutputStream getOutputStream() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean listenProgress() {
+                        return false;
+                    }
+
+                    @Override
+                    public void onProgress(StreamingProgressEvent event) {
+
+                    }
+
+                    @Override
+                    public void streamingStarted(StreamingStartEvent event) {
+
+                    }
+
+                    @Override
+                    public void streamingFinished(StreamingEndEvent event) {
+
+                    }
+
+                    @Override
+                    public void streamingFailed(StreamingErrorEvent event) {
+
+                    }
+
+                    @Override
+                    public boolean isInterrupted() {
+                        return false;
+                    }
+                });
+            }
+        }
+    }
+
+
+    public AcceptCriterion getAcceptCriterion(){
+        return AcceptAll.get();
+    }
+
+
+}
+*/
 
 
 //class FileUploader implements Upload.Receiver, Upload.SucceededListener{
