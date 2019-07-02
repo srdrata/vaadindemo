@@ -59,10 +59,10 @@ public class MainUI extends UI {
             UI.getCurrent().addWindow(uploadOperationsWindow);
         });
 
-        uploadProgressDeneme.addClickListener(clickEvent -> {
-            UploadWithProgressDenemeWindow uploadWithProgressDenemeWindow = new UploadWithProgressDenemeWindow();
-            UI.getCurrent().addWindow(uploadWithProgressDenemeWindow);
-        });
+//        uploadProgressDeneme.addClickListener(clickEvent -> {
+//            UploadWithProgressDenemeWindow uploadWithProgressDenemeWindow = new UploadWithProgressDenemeWindow();
+//            UI.getCurrent().addWindow(uploadWithProgressDenemeWindow);
+//        });
 
 //        multiFileUploadDeneme.addClickListener(clickEvent -> {
 //            UploadMultiFileUploadDeneme uploadMultiFileUploadDeneme = new UploadMultiFileUploadDeneme();

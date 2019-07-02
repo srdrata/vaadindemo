@@ -25,9 +25,6 @@ public class FileExporter {
 
         window = new Window();
         window.setCaption("Save as");
-        window.setPosition(20, 150);
-        window.setWidth("210px");
-        window.setHeight("210px");
         window.setModal(true);
         window.setContent(mainLayout);
 
