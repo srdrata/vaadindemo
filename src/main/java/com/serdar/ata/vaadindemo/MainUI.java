@@ -53,7 +53,7 @@ public class MainUI extends UI {
                     try {
 
                         System.out.println("Writer to outstream");
-                        outputStream.write(("heelo " + UUID.randomUUID().toString()) .getBytes());
+                        outputStream.write(("Random generated UUID " + UUID.randomUUID().toString()) .getBytes());
 
 
 
@@ -78,10 +78,10 @@ public class MainUI extends UI {
             UI.getCurrent().addWindow(uploadWithProgressDenemeWindow);
         });
 
-        multiFileUploadDeneme.addClickListener(clickEvent -> {
-            UploadMultiFileUploadDeneme uploadMultiFileUploadDeneme = new UploadMultiFileUploadDeneme();
-            UI.getCurrent().addWindow(uploadMultiFileUploadDeneme);
-        });
+//        multiFileUploadDeneme.addClickListener(clickEvent -> {
+//            UploadMultiFileUploadDeneme uploadMultiFileUploadDeneme = new UploadMultiFileUploadDeneme();
+//            UI.getCurrent().addWindow(uploadMultiFileUploadDeneme);
+//        });
 
 
 
