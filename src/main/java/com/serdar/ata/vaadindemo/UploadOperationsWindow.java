@@ -1,6 +1,7 @@
 package com.serdar.ata.vaadindemo;
 
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.server.StreamVariable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 
 public class UploadOperationsWindow extends Window  implements Upload.FinishedListener, Upload.StartedListener, Upload.FailedListener, Upload.SucceededListener {
 
-    private File file;
     private Button saveButton ;
     private Button cancelButton ;
 
@@ -36,6 +36,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     private TempFile tempFile;
 
     private VerticalLayout fileArea;
+    private boolean dropTargetInterrupted;
 
 
     public UploadOperationsWindow(){
@@ -78,7 +79,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         buttonLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
 
         setPosition(20, 150);
-        setWidth("600px");
+        setWidth("600px"); //((Page.getCurrent().getBrowserWindowWidth()) >> 1), Unit.PIXELS
         //setHeight("400px");
         setModal(true);
         setContent(mainLayout);
@@ -101,12 +102,6 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     }
 
-    protected  void initProgressPanel(){
-        progressPanel = new Panel("deneme");
-        progressPanel.setSizeFull();
-        progressPanel.setStyleName(ValoTheme.PANEL_WELL);
-    }
-
     @Override
     public void setContent(Component content) {
         super.setContent(content);
@@ -119,24 +114,23 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         dropPanel = new Panel(dropLayout);
         dropPanel.setSizeFull();
         dropPanel.setStyleName(ValoTheme.PANEL_WELL);
-        //dropPanel.setStyleName(ValoTheme.PANEL_BORDERLESS);
 
         new FileDropTarget<>(dropLayout, event -> {
 
-            Collection<Html5File> files = event.getFiles().stream().sorted((o1, o2) -> {
-                //TODO control locale settings
-                Locale locale = Locale.getDefault();
-                Collator collator = Collator.getInstance(locale); // The Collator class performs locale-sensitive String comparison
-                return collator.compare(o1.getFileName(), o2.getFileName()); //compare file names
-            }).collect(Collectors.toList());
-
+            dropTargetInterrupted = false;
 
             event.getFiles().forEach(file -> {
 
                 FileUploadProgress fileProgress = new FileUploadProgress(file.getFileName());
-                //fileProgress.setWidth(100, Unit.PERCENTAGE);
+                Button deleteButton = (Button) fileProgress.getComponent(2);
+                deleteButton.addClickListener(e -> {
+                    fileProgress.setVisible(false);
+                    dropTargetInterrupted = true;
+                });
                 fileArea.addComponent(fileProgress);
+
                 file.setStreamVariable(new StreamVariable() {
+
                     @Override
                     public OutputStream getOutputStream() {
                         tempFile = new TempFile(file.getFileName());
@@ -153,6 +147,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                     public void onProgress(StreamingProgressEvent event) {
                         float value = event.getBytesReceived() / (float)event.getContentLength();
                         fileProgress.setValue(value);
+
                     }
 
                     @Override
@@ -172,7 +167,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
                     @Override
                     public boolean isInterrupted() {
-                        return false;
+                        return dropTargetInterrupted;
                     }
                 });
             });
@@ -182,11 +177,12 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     }
 
     protected  void initUpload(){
+
         upload = new Upload(null, receiver);
         upload.addFailedListener(this);
         upload.addSucceededListener(this);
         upload.addStartedListener(this);
-        upload.setImmediateMode(true); //TODO setImmediateMode = false yapılıp ekrandan upload componenti gizlenip save butona basınca upload işleminin başlamasının sağlanması
+        upload.setImmediateMode(true);
         upload.setButtonStyleName(ValoTheme.BUTTON_PRIMARY);
         upload.setButtonCaption("Browse File");
         upload.setId("VLbsUpload");
@@ -194,6 +190,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     @Override
     public void uploadFailed(Upload.FailedEvent event) {
+
         Notification.show("Upload Failed" + " " + event.getReason());
         UI.getCurrent().setPollInterval(-1);
     }
@@ -208,6 +205,12 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     public void uploadStarted(Upload.StartedEvent event) {
 
         FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
+        Button deleteButton = (Button) fileProgress.getComponent(2);
+        deleteButton.addClickListener(e -> {
+
+            upload.interruptUpload();
+            fileProgress.setVisible(false);
+        });
         event.getUpload().addProgressListener(new Upload.ProgressListener() {
             @Override
             public void updateProgress(long readBytes, long contentLength) {
@@ -222,8 +225,11 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
     @Override
     public void uploadSucceeded(Upload.SucceededEvent event) {
+
         System.out.println("upload succeed");
     }
+
+    //------------------------------------------------
 
     class FileUploadProgress extends HorizontalLayout
     {
@@ -248,10 +254,16 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             progressLayout.setWidth(120, Unit.PIXELS);
             progress.setWidth(100, Unit.PERCENTAGE);
 
-            this.addComponent(progressLayout);
-            this.setExpandRatio(progressLayout, 0f);
-            this.setExpandRatio(filenameLabel, 1f);
 
+            Button deleteButton = new Button("delete");
+            deleteButton.setWidth(100, Unit.PERCENTAGE);
+
+
+            this.addComponent(progressLayout);
+            this.addComponent(deleteButton);
+            this.setExpandRatio(progressLayout, 0f);
+            this.setExpandRatio(filenameLabel, 4f);
+            this.setExpandRatio(deleteButton, 1f);
 
         }
 

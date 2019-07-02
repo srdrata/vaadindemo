@@ -66,8 +66,6 @@ public class MainUI extends UI {
             UI.getCurrent().addWindow(modalWindow);
         });
 
-
-
         openUploadDialog.addClickListener(clickEvent -> {
             UploadOperationsWindow uploadOperationsWindow = new UploadOperationsWindow();
             UI.getCurrent().addWindow(uploadOperationsWindow);
@@ -82,8 +80,6 @@ public class MainUI extends UI {
 //            UploadMultiFileUploadDeneme uploadMultiFileUploadDeneme = new UploadMultiFileUploadDeneme();
 //            UI.getCurrent().addWindow(uploadMultiFileUploadDeneme);
 //        });
-
-
 
     }
 
