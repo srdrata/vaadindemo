@@ -1,27 +1,19 @@
 package com.serdar.ata.vaadindemo;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.vaadin.annotations.StyleSheet;
-import com.vaadin.event.dd.acceptcriteria.AcceptAll;
-import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.server.Page;
 import com.vaadin.server.StreamVariable;
-import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
-import com.vaadin.ui.dnd.FileDropHandler;
 import com.vaadin.ui.dnd.FileDropTarget;
-import com.vaadin.ui.dnd.event.FileDropEvent;
 import com.vaadin.ui.themes.ValoTheme;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+
 import java.io.File;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Collator;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.Collection;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class UploadOperationsWindow extends Window  implements Upload.FinishedListener, Upload.StartedListener, Upload.FailedListener, Upload.SucceededListener {
