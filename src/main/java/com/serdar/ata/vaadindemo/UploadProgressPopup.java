@@ -7,7 +7,6 @@ import com.vaadin.ui.*;
 import com.vaadin.ui.renderers.ProgressBarRenderer;
 import com.vaadin.ui.renderers.TextRenderer;
 import elemental.json.JsonValue;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +16,7 @@ import java.util.Map;
  * @author Serdar.Ata
  * Created by Serdar.Ata  on 26/06/2019.
  */
+@Deprecated
 public class UploadProgressPopup extends Window {
     private Collection<FileInfo> fileInfoCollection;
     private Map<String, FileInfo> fileNamefileInfoMap = new HashMap<>();

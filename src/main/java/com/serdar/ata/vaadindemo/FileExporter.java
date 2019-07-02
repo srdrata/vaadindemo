@@ -1,90 +1,104 @@
 package com.serdar.ata.vaadindemo;
 
-import com.vaadin.server.FileDownloader;
-import com.vaadin.server.StreamResource;
+import com.vaadin.server.*;
 import com.vaadin.ui.*;
+import java.io.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.function.Consumer;
+public class FileExporter {
 
-/**
- * @author Serdar.Ata
- * Created by Serdar.Ata  on 24/06/2019.
- */
-public class FileExporter extends Window {
+    private StreamResource resource;
+    private Window window;
 
-    private String filename;
-    Consumer writer;
-    FileDownloader fileDownloader;
+    public FileExporter(String filename) {
 
-    public FileExporter(String filename, Consumer <OutputStream> writer) {
-        super("Save As");
-
-        this.writer = writer;
         TextField fileNameText = new TextField();
         fileNameText.setValue(filename);
 
-        Button saveButton = new Button("OK");
+        Button okButton = new Button("OK");
         Button cancelButton = new Button("Cancel");
 
         VerticalLayout mainLayout = new VerticalLayout();
         HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.addComponents(saveButton, cancelButton);
+        buttonLayout.addComponents(okButton, cancelButton);
         mainLayout.addComponents(fileNameText, buttonLayout);
         mainLayout.setMargin(true);
-        setPosition(20, 150);
-        setWidth("210px");
-        setHeight("210px");
-        setModal(true);
-        setContent(mainLayout);
+
+        window = new Window();
+        window.setCaption("Save as");
+        window.setPosition(20, 150);
+        window.setWidth("210px");
+        window.setHeight("210px");
+        window.setModal(true);
+        window.setContent(mainLayout);
 
         fileNameText.selectAll();
         fileNameText.focus();
 
-        StreamResource resource = new StreamResource(new StreamResource.StreamSource() {
-            @Override
-            public InputStream getStream() {
+        resource = new StreamResource(null, fileNameText.getValue());
+        resource.setCacheTime(0);
 
-                System.out.println("get stream ");
+        okButton.addClickListener(event -> {
 
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                writer.accept(bos);
-                byte[] data = bos.toByteArray();
-                return new ByteArrayInputStream(data);
-            }
-        }, fileNameText.getValue());
+            System.out.println("btn click");
 
-
-        saveButton.addClickListener(event -> {
-            System.out.println("btn click:" + fileNameText.getValue());
-
-            StreamResource resource1 = new StreamResource(new StreamResource.StreamSource() {
+            resource.setStreamSource(new StreamResource.StreamSource() {
                 @Override
                 public InputStream getStream() {
-
-                    System.out.println("get stream ");
-
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    writer.accept(bos);
-                    byte[] data = bos.toByteArray();
-                    return new ByteArrayInputStream(data);
+                    System.out.println("getStream");
+                    return new ByteArrayInputStream(os.toByteArray());
                 }
-            }, fileNameText.getValue());
-            resource1.setCacheTime(0);
+            });
 
-
-            fileDownloader.setFileDownloadResource(resource1);
+            resource.setFilename(fileNameText.getValue());
         });
 
-        fileDownloader = new FileDownloader(resource);
-        fileDownloader.extend(saveButton);
-        cancelButton.addClickListener(clickEvent -> close());
+        FileDownloader fileDownloader = new CustomFileDownloader(resource);
+        fileDownloader.extend(okButton);
+
+        cancelButton.addClickListener(clickEvent -> window.close());
+        UI.getCurrent().addWindow(window);
 
     }
 
+    ByteArrayOutputStream os ;
+
+    OutputStream getOutputStream()
+    {
+        if(os == null)
+            os = new FileExportOutputStream();
+
+        return os;
+    }
+
+    class FileExportOutputStream extends ByteArrayOutputStream
+    {
+        @Override
+        public void close() throws IOException {
+            super.close();
+
+        }
+    }
+
+    class CustomFileDownloader extends FileDownloader{
+
+        public CustomFileDownloader(Resource resource) {
+            super(resource);
+        }
+
+        @Override
+        public boolean handleConnectorRequest(VaadinRequest request, VaadinResponse response, String path) throws IOException {
+            try {
+                boolean b = super.handleConnectorRequest(request, response, path);
+                return b;
+            }catch(Exception e){
+                e.printStackTrace();
+                Notification.show("Error occured during download"). setDelayMsec(-1);
+                return false;
+            }finally {
+                window.close();
+            }
+        }
+    }
 
 }
 

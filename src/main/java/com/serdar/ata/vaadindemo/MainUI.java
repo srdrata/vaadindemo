@@ -2,7 +2,6 @@ package com.serdar.ata.vaadindemo;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Widgetset;
-import com.vaadin.server.StreamResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.spring.annotation.SpringUI;
@@ -10,12 +9,9 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * @author Serdar.Ata
@@ -46,24 +42,16 @@ public class MainUI extends UI {
 
         openDownloadDialog.addClickListener(clickEvent -> {
 
-            FileExporter modalWindow = new FileExporter("filename.txt", new Consumer<OutputStream>() {
-                @Override
-                public void accept(OutputStream outputStream) {
+            String export =  "Random generated UUID " + Arrays.toString(UUID.randomUUID().toString().getBytes());
 
-                    try {
+            FileExporter modalWindow = new FileExporter("filename.txt");
+            OutputStream os = modalWindow.getOutputStream();
 
-                        System.out.println("Writer to outstream");
-                        outputStream.write(("Random generated UUID " + UUID.randomUUID().toString()) .getBytes());
-
-
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            UI.getCurrent().addWindow(modalWindow);
+            try {
+                System.out.println("Writer to outstream");
+                os.write(("Random generated UUID " + UUID.randomUUID().toString()).getBytes());
+                os.close();
+            }catch(Exception e){}
         });
 
         openUploadDialog.addClickListener(clickEvent -> {
@@ -81,18 +69,6 @@ public class MainUI extends UI {
 //            UI.getCurrent().addWindow(uploadMultiFileUploadDeneme);
 //        });
 
-    }
-
-    private StreamResource createFileResource(FileInputStream fileInputStream) {
-        StreamResource sr = new StreamResource(new StreamResource.StreamSource() {
-            @Override
-            public InputStream getStream() {
-                return fileInputStream;
-            }
-        }, "");
-
-        sr.setCacheTime(0);
-        return sr;
     }
 
 }
