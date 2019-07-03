@@ -28,14 +28,17 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     private Panel dropPanel;
     private TempFile tempFile;
     private VerticalLayout fileArea;
-    private Button fileUploadedButton;
-    private Button deleteButton;
+
 
 
     private boolean dropTargetInterrupted;
 
     public UploadOperationsWindow(){
         super("Upload File");
+        Page.getCurrent().getStyles().add(".abc{ color:red !important;}");
+        Page.getCurrent().getStyles().add(".import-progress-done{color:green !important;}");
+        Page.getCurrent().getStyles().add(".import-progress-done > .v-progressbar-wrapper > .v-progressbar-indicator{  " +
+                "   border: 1px solid #189100;   background-image: linear-gradient(to bottom,#20c200 2%, #189100 98%);}");
 
         Page.getCurrent().getStyles().add(".color-red {color: red !important}");
         Page.getCurrent().getStyles().add(".color-green {color: green !important}");
@@ -120,7 +123,10 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             event.getFiles().forEach(file -> {
 
                 FileUploadProgress fileProgress = new FileUploadProgress(file.getFileName());
-//                Button deleteButton = (Button) fileProgress.getComponent(2);
+                VerticalLayout iconLayout = (VerticalLayout) fileProgress.getComponent(2);
+                Button deleteButton = (Button) fileProgress.getComponent(0);
+                Button fileUploadedButton = (Button) fileProgress.getComponent(1);
+
                 deleteButton.addClickListener(e -> {
                     fileProgress.setVisible(false);
                     dropTargetInterrupted = true;
@@ -161,6 +167,12 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                         if(fileUploadedButton != null){
                             fileUploadedButton.setVisible(true);
                         }
+                        HorizontalLayout progressLayout = (HorizontalLayout) fileProgress.getComponent(1);
+                        ProgressBar progressBar = (ProgressBar) progressLayout.getComponent(0);
+                        progressBar.addStyleName("import-progress-done");
+                        Label filenameLabel = (Label) fileProgress.getComponent(0);
+                        Notification.show("Upload Completed " + filenameLabel.getValue());
+                        UI.getCurrent().setPollInterval(-1);
                     }
 
                     @Override
@@ -178,7 +190,6 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     }
 
     protected  void initUpload(){
-
         upload = new Upload(null, receiver);
         upload.addFailedListener(this);
         upload.addSucceededListener(this);
@@ -219,6 +230,9 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
             System.out.println("New progress");
             FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
+            VerticalLayout iconsLayout = (VerticalLayout) fileProgress.getComponent(2);
+            Button deleteButton = (Button) iconsLayout.getComponent(0);
+            Button fileUploadedButton = (Button) iconsLayout.getComponent(1);
 
             if(fileUploadedButton != null){
                 fileUploadedButton.setVisible(false);
@@ -241,11 +255,32 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                 }
             });
 
+            event.getUpload().addSucceededListener(new Upload.SucceededListener(){
+
+                @Override
+                public void uploadSucceeded(Upload.SucceededEvent finishedEvent) {
+
+                    HorizontalLayout progressLayout = (HorizontalLayout) fileProgress.getComponent(1);
+                    ProgressBar progressBar = (ProgressBar) progressLayout.getComponent(0);
+
+                    progressBar.addStyleName("import-progress-done");
+
+                    Label filenameLabel = (Label) fileProgress.getComponent(0);
+                    Notification.show("Upload Completed " + filenameLabel.getValue());
+                    UI.getCurrent().setPollInterval(-1);
+                }
+            });
+
             fileArea.addComponent(fileProgress);
             System.out.println("upload started");
+        }else{
+            Notification.show("Select a File!");
+            UI.getCurrent().setPollInterval(-1);
+            upload.interruptUpload();
         }
-
     }
+
+
 
     @Override
     public void uploadSucceeded(Upload.SucceededEvent event) {
@@ -261,6 +296,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     {
         Label filenameLabel;
         ProgressBar progress;
+        private Button fileUploadedButton;
+        private Button deleteButton;
 
         FileUploadProgress(String filename)
         {
