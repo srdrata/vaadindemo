@@ -30,18 +30,18 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     private VerticalLayout fileArea;
 
 
-
     private boolean dropTargetInterrupted;
 
     public UploadOperationsWindow(){
         super("Upload File");
         Page.getCurrent().getStyles().add(".abc{ color:red !important;}");
-        Page.getCurrent().getStyles().add(".import-progress-done{color:green !important;}");
-        Page.getCurrent().getStyles().add(".import-progress-done > .v-progressbar-wrapper > .v-progressbar-indicator{  " +
-                "   border: 1px solid #189100;   background-image: linear-gradient(to bottom,#20c200 2%, #189100 98%);}");
+        //Page.getCurrent().getStyles().add(".import-progress-done{color:green !important;}");
+        Page.getCurrent().getStyles().add(".import-progress-done > .v-progressbar-wrapper > .v-progressbar-indicator{ border: 1px solid #189100; background-image: linear-gradient(to bottom,#20c200 2%, #189100 98%);}");
 
         Page.getCurrent().getStyles().add(".color-red {color: red !important}");
-        Page.getCurrent().getStyles().add(".color-green {color: green !important}");
+        Page.getCurrent().getStyles().add(".color-green {color: #189100 !important}");
+        Page.getCurrent().getStyles().add(".custom-upload-button-style{display: none !important;}");
+        //Page.getCurrent().getStyles().add(".custom-upload-style > div > .gwt-FileUpload{background-color: red !important;}");
 
         this.receiver = (filename, mimeType) -> {
             tempFile = new TempFile(filename);
@@ -78,11 +78,10 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         buttonLayout.setComponentAlignment(saveButton, Alignment.MIDDLE_LEFT);
         buttonLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
 
-        setPosition(25, 150);
+        setPosition(15, 150);
         setWidth("600px");
         setModal(true);
         setContent(mainLayout);
-
 
         initDropPanel();
         initUpload();
@@ -123,9 +122,9 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             event.getFiles().forEach(file -> {
 
                 FileUploadProgress fileProgress = new FileUploadProgress(file.getFileName());
-                VerticalLayout iconLayout = (VerticalLayout) fileProgress.getComponent(2);
-                Button deleteButton = (Button) fileProgress.getComponent(0);
-                Button fileUploadedButton = (Button) fileProgress.getComponent(1);
+                HorizontalLayout iconsLayout = (HorizontalLayout) fileProgress.getComponent(2);
+                Button deleteButton = (Button) iconsLayout.getComponent(0);
+                Button fileUploadedButton = (Button) iconsLayout.getComponent(1);
 
                 deleteButton.addClickListener(e -> {
                     fileProgress.setVisible(false);
@@ -171,7 +170,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                         ProgressBar progressBar = (ProgressBar) progressLayout.getComponent(0);
                         progressBar.addStyleName("import-progress-done");
                         Label filenameLabel = (Label) fileProgress.getComponent(0);
-                        Notification.show("Upload Completed " + filenameLabel.getValue());
+//                        Notification.show("Upload Completed " + filenameLabel.getValue());
                         UI.getCurrent().setPollInterval(-1);
                     }
 
@@ -192,10 +191,11 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     protected  void initUpload(){
         upload = new Upload(null, receiver);
         upload.addFailedListener(this);
+        //upload.addStyleName("custom-upload-style");
         upload.addSucceededListener(this);
         upload.addStartedListener(this);
-        upload.setImmediateMode(false);
-        upload.setButtonStyleName(ValoTheme.BUTTON_PRIMARY);
+        upload.setImmediateMode(true);
+        //upload.setButtonStyleName("custom-upload-button-style");
         upload.setButtonCaption("Browse File");
         upload.setId("VLbsUpload");
     }
@@ -216,21 +216,18 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             progressListener = null;
         }
 
-        upload.setEnabled(true);
     }
+
 
     @Override
     public void uploadStarted(Upload.StartedEvent event) {
-
-        upload.setEnabled(false);
-
 
         System.out.println("upload evet:" + event.getFilename());
         if(!StringUtils.isEmpty(event.getFilename())) {
 
             System.out.println("New progress");
             FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
-            VerticalLayout iconsLayout = (VerticalLayout) fileProgress.getComponent(2);
+            HorizontalLayout iconsLayout = (HorizontalLayout) fileProgress.getComponent(2);
             Button deleteButton = (Button) iconsLayout.getComponent(0);
             Button fileUploadedButton = (Button) iconsLayout.getComponent(1);
 
@@ -268,6 +265,13 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
                     Label filenameLabel = (Label) fileProgress.getComponent(0);
                     Notification.show("Upload Completed " + filenameLabel.getValue());
                     UI.getCurrent().setPollInterval(-1);
+
+
+                    if(fileUploadedButton != null){
+                        fileUploadedButton.setVisible(true);
+                    }
+
+                    System.out.println("upload succeed");
                 }
             });
 
@@ -280,55 +284,49 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         }
     }
 
-
-
     @Override
     public void uploadSucceeded(Upload.SucceededEvent event) {
-        if(fileUploadedButton != null){
-            fileUploadedButton.setVisible(true);
-        }
-        System.out.println("upload succeed");
+
     }
 
     //------------------------------------------------
 
     class FileUploadProgress extends HorizontalLayout
     {
-        Label filenameLabel;
-        ProgressBar progress;
-        private Button fileUploadedButton;
+        private FileUploadProgress fileProgress;
+        private Label filenameLabel;
+        private HorizontalLayout progressLayout;
+        private ProgressBar progress;
+        private HorizontalLayout iconsLayout;
         private Button deleteButton;
+        private Button fileUploadedButton;
 
         FileUploadProgress(String filename)
         {
             this.setMargin(false);
             this.setWidth("100%");
 
-            this.addStyleName("red");
-
             filenameLabel = new Label(filename);
             filenameLabel.setWidth("100%");
-            this.addComponent(filenameLabel);
-
 
             progress = new ProgressBar();
-            HorizontalLayout progressLayout = new HorizontalLayout();
+            progressLayout = new HorizontalLayout();
+
             progressLayout.addComponent(progress);
             progressLayout.setWidth(120, Unit.PIXELS);
             progress.setWidth(100, Unit.PERCENTAGE);
 
-
-            HorizontalLayout iconsLayout = new HorizontalLayout();
-
+            iconsLayout = new HorizontalLayout();
 
             deleteButton = new Button();
+            deleteButton.setWidth(15, Unit.PIXELS);
             deleteButton.addStyleName("color-red");
             deleteButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
             deleteButton.addStyleName(ValoTheme.BUTTON_ICON_ONLY);
             deleteButton.setIcon(VaadinIcons.CLOSE_CIRCLE);
 
             fileUploadedButton = new Button();
-
+            fileUploadedButton.setWidth(15, Unit.PIXELS);
             fileUploadedButton.addStyleName("color-green");
             fileUploadedButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
             fileUploadedButton.addStyleName(ValoTheme.BUTTON_ICON_ONLY);
@@ -339,14 +337,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             iconsLayout.addComponents(deleteButton, fileUploadedButton);
 
 
-            this.addComponents(progressLayout, iconsLayout);
-//            this.addComponent(deleteButton);
-//            this.addComponent(fileUploadedButton);
-            this.setExpandRatio(filenameLabel, 10f);
-//            this.setExpandRatio(deleteButton, 1f);
-//            this.setExpandRatio(fileUploadedButton, 1f);
-            this.setExpandRatio(iconsLayout, 2f);
-
+            this.addComponents(filenameLabel, progressLayout, iconsLayout);
+            this.setExpandRatio(filenameLabel, 12f);
             this.setComponentAlignment(filenameLabel, Alignment.TOP_CENTER);
             this.setComponentAlignment(progressLayout, Alignment.BOTTOM_LEFT);
             this.setComponentAlignment(iconsLayout, Alignment.TOP_CENTER);
@@ -359,7 +351,6 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         }
 
     }
-
 
 
 }
