@@ -36,7 +36,8 @@ public class MainUI extends UI {
         Button uploadProgressDeneme = new Button("Upload progress ");
         Button multiFileUploadDeneme = new Button("MultiFile Upload");
 
-        mainLayout.addComponents(openDownloadDialog, openUploadDialog, uploadProgressDeneme, multiFileUploadDeneme);
+//        mainLayout.addComponents(openDownloadDialog, openUploadDialog, uploadProgressDeneme, multiFileUploadDeneme);
+        mainLayout.addComponents(openDownloadDialog, openUploadDialog);
 
         setContent(mainLayout);
 

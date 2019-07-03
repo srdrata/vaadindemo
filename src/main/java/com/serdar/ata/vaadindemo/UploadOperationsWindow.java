@@ -1,11 +1,14 @@
 package com.serdar.ata.vaadindemo;
 
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.server.StreamVariable;
+import com.vaadin.shared.Registration;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.dnd.FileDropTarget;
 import com.vaadin.ui.themes.ValoTheme;
+import org.springframework.util.StringUtils;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MVerticalLayout;
 
@@ -14,21 +17,28 @@ import java.io.OutputStream;
 
 public class UploadOperationsWindow extends Window  implements Upload.FinishedListener, Upload.StartedListener, Upload.FailedListener, Upload.SucceededListener {
 
-//    private Button saveButton ;
-//    private Button cancelButton ;
-//    private HorizontalLayout buttonLayout ;
+    private Button saveButton ;
+    private Button cancelButton ;
+    private HorizontalLayout buttonLayout ;
 
     private Upload upload;
+    private Registration progressListener;
     private Upload.Receiver receiver;
     private VerticalLayout dropLayout;
     private Panel dropPanel;
     private TempFile tempFile;
     private VerticalLayout fileArea;
+    private Button fileUploadedButton;
+    private Button deleteButton;
+
 
     private boolean dropTargetInterrupted;
 
     public UploadOperationsWindow(){
         super("Upload File");
+
+        Page.getCurrent().getStyles().add(".color-red {color: red !important}");
+        Page.getCurrent().getStyles().add(".color-green {color: green !important}");
 
         this.receiver = (filename, mimeType) -> {
             tempFile = new TempFile(filename);
@@ -37,15 +47,15 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
         init();
 
-//        saveButton.addClickListener(clickEvent -> {
-//            //TODO DocumentService->DocumentUploadComponent->init() ve initDropLabel
-//            upload.submitUpload();
-//            System.out.println( "read bytes" + String.valueOf(upload.getBytesRead()) + "get upload size: " + String.valueOf(upload.getUploadSize()));
-//        });
-//
-//        cancelButton.addClickListener(clickEvent ->{
-//            close();
-//        } );
+        saveButton.addClickListener(clickEvent -> {
+            //TODO DocumentService->DocumentUploadComponent->init() ve initDropLabel
+            upload.submitUpload();
+            System.out.println( "read bytes" + String.valueOf(upload.getBytesRead()) + "get upload size: " + String.valueOf(upload.getUploadSize()));
+        });
+
+        cancelButton.addClickListener(clickEvent ->{
+            close();
+        } );
     }
 
     private void init(){
@@ -58,12 +68,12 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         mainLayout.addComponent(fileArea);
         fileArea.setWidth(100, Unit.PERCENTAGE);
 
-//        saveButton = new Button("Save");
-//        cancelButton = new Button("Cancel");
-//        buttonLayout = new HorizontalLayout();
-//        buttonLayout.addComponents(saveButton, cancelButton);
-//        buttonLayout.setComponentAlignment(saveButton, Alignment.MIDDLE_LEFT);
-//        buttonLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
+        saveButton = new Button("Save");
+        cancelButton = new Button("Cancel");
+        buttonLayout = new HorizontalLayout();
+        buttonLayout.addComponents(saveButton, cancelButton);
+        buttonLayout.setComponentAlignment(saveButton, Alignment.MIDDLE_LEFT);
+        buttonLayout.setComponentAlignment(cancelButton, Alignment.MIDDLE_RIGHT);
 
         setPosition(25, 150);
         setWidth("600px");
@@ -74,7 +84,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         initDropPanel();
         initUpload();
 
-        mainLayout.addComponents(dropPanel);
+        mainLayout.addComponents(dropPanel, buttonLayout);
 
         MVerticalLayout components = new MVerticalLayout().withUndefinedSize().withDefaultComponentAlignment(Alignment.MIDDLE_CENTER).withSpacing(true).withFullWidth().with(
                 new MLabel(VaadinIcons.UPLOAD.getHtml()).withContentMode(ContentMode.HTML).withStyleName(ValoTheme.LABEL_COLORED, "upload-icon"),
@@ -85,6 +95,8 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
         dropLayout.addComponent(components);
         dropLayout.setComponentAlignment(components, Alignment.MIDDLE_CENTER);
+
+
 
     }
 
@@ -108,7 +120,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             event.getFiles().forEach(file -> {
 
                 FileUploadProgress fileProgress = new FileUploadProgress(file.getFileName());
-                Button deleteButton = (Button) fileProgress.getComponent(2);
+//                Button deleteButton = (Button) fileProgress.getComponent(2);
                 deleteButton.addClickListener(e -> {
                     fileProgress.setVisible(false);
                     dropTargetInterrupted = true;
@@ -139,12 +151,16 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
 
                     @Override
                     public void streamingStarted(StreamingStartEvent event) {
-
+                        if(fileUploadedButton != null){
+                            fileUploadedButton.setVisible(false);
+                        }
                     }
 
                     @Override
                     public void streamingFinished(StreamingEndEvent event) {
-
+                        if(fileUploadedButton != null){
+                            fileUploadedButton.setVisible(true);
+                        }
                     }
 
                     @Override
@@ -167,7 +183,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         upload.addFailedListener(this);
         upload.addSucceededListener(this);
         upload.addStartedListener(this);
-        upload.setImmediateMode(true);
+        upload.setImmediateMode(false);
         upload.setButtonStyleName(ValoTheme.BUTTON_PRIMARY);
         upload.setButtonCaption("Browse File");
         upload.setId("VLbsUpload");
@@ -176,7 +192,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     @Override
     public void uploadFailed(Upload.FailedEvent event) {
 
-        Notification.show("Upload Failed" + " " + event.getReason());
+        //Notification.show("Upload Failed" + " " + event.getReason());
         UI.getCurrent().setPollInterval(-1);
     }
 
@@ -184,34 +200,58 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
     public void uploadFinished(Upload.FinishedEvent event) {
 
         System.out.println("upload finished");
+        if(progressListener != null) {
+            progressListener.remove();
+            progressListener = null;
+        }
+
+        upload.setEnabled(true);
     }
 
     @Override
     public void uploadStarted(Upload.StartedEvent event) {
 
-        FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
+        upload.setEnabled(false);
 
-        Button deleteButton = (Button) fileProgress.getComponent(2);
-        deleteButton.addClickListener(e -> {
-            upload.interruptUpload();
-            fileProgress.setVisible(false);
-            this.tempFile.delete();
-        });
 
-        event.getUpload().addProgressListener(new Upload.ProgressListener() {
-            @Override
-            public void updateProgress(long readBytes, long contentLength) {
-                fileProgress.setValue( readBytes / (float)contentLength);
+        System.out.println("upload evet:" + event.getFilename());
+        if(!StringUtils.isEmpty(event.getFilename())) {
+
+            System.out.println("New progress");
+            FileUploadProgress fileProgress = new FileUploadProgress(event.getFilename());
+
+            if(fileUploadedButton != null){
+                fileUploadedButton.setVisible(false);
             }
-        });
 
-        fileArea.addComponent(fileProgress);
-        System.out.println("upload started");
+            //Button deleteButton = (Button) fileProgress.getComponent(2);
+            deleteButton.addClickListener(e -> {
+                upload.interruptUpload();
+                fileProgress.setVisible(false);
+                this.tempFile.delete();
+            });
+
+            if(progressListener != null)
+                progressListener.remove();
+
+            progressListener = event.getUpload().addProgressListener(new Upload.ProgressListener() {
+                @Override
+                public void updateProgress(long readBytes, long contentLength) {
+                    fileProgress.setValue(readBytes / (float) contentLength);
+                }
+            });
+
+            fileArea.addComponent(fileProgress);
+            System.out.println("upload started");
+        }
+
     }
 
     @Override
     public void uploadSucceeded(Upload.SucceededEvent event) {
-
+        if(fileUploadedButton != null){
+            fileUploadedButton.setVisible(true);
+        }
         System.out.println("upload succeed");
     }
 
@@ -241,23 +281,39 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
             progress.setWidth(100, Unit.PERCENTAGE);
 
 
-            Button deleteButton = new Button("delete");
-            deleteButton.setId("uploadDeleteButton");
-            deleteButton.addStyleName(ValoTheme.BUTTON_DANGER);
+            HorizontalLayout iconsLayout = new HorizontalLayout();
+
+
+            deleteButton = new Button();
+            deleteButton.addStyleName("color-red");
             deleteButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
             deleteButton.addStyleName(ValoTheme.BUTTON_ICON_ONLY);
             deleteButton.setIcon(VaadinIcons.CLOSE_CIRCLE);
 
-            this.addComponent(progressLayout);
-            this.addComponent(deleteButton);
-            this.setExpandRatio(progressLayout, 0f);
-            this.setExpandRatio(filenameLabel, 10f);
-            this.setExpandRatio(deleteButton, 1f);
+            fileUploadedButton = new Button();
 
+            fileUploadedButton.addStyleName("color-green");
+            fileUploadedButton.addStyleName(ValoTheme.BUTTON_BORDERLESS);
+            fileUploadedButton.addStyleName(ValoTheme.BUTTON_ICON_ONLY);
+            fileUploadedButton.setIcon(VaadinIcons.CHECK_CIRCLE);
+            fileUploadedButton.setVisible(false);
+            fileUploadedButton.setEnabled(false);
+
+            iconsLayout.addComponents(deleteButton, fileUploadedButton);
+
+
+            this.addComponents(progressLayout, iconsLayout);
+//            this.addComponent(deleteButton);
+//            this.addComponent(fileUploadedButton);
+            this.setExpandRatio(filenameLabel, 10f);
+//            this.setExpandRatio(deleteButton, 1f);
+//            this.setExpandRatio(fileUploadedButton, 1f);
+            this.setExpandRatio(iconsLayout, 2f);
 
             this.setComponentAlignment(filenameLabel, Alignment.TOP_CENTER);
             this.setComponentAlignment(progressLayout, Alignment.BOTTOM_LEFT);
-            this.setComponentAlignment(deleteButton, Alignment.TOP_CENTER);
+            this.setComponentAlignment(iconsLayout, Alignment.TOP_CENTER);
+//            this.setComponentAlignment(deleteButton, Alignment.TOP_CENTER);
         }
 
         public void setValue(float value)
@@ -266,5 +322,7 @@ public class UploadOperationsWindow extends Window  implements Upload.FinishedLi
         }
 
     }
+
+
 
 }
